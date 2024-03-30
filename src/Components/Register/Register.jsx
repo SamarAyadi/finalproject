@@ -1,42 +1,34 @@
 import Styles from "./Register.module.css";
 
 import { useFormik } from "formik";
+import * as Yup from "yup";
 
 export default function Register() {
   function registerSubmit(values) {
-    console.log("Submit");
+    console.log(values);
   }
 
-  function validate(values) {
-    console.log("validate call")
-    let phoneRegex =
-      /(\+\d{1,3}\s?)?((\(\d{3}\)\s?)|(\d{3})(\s|-?))(\d{3}(\s|-?))(\d{4})(\s?(([E|e]xt[:|.|]?)|x|X)(\s?\d+))?/g;
-    let emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
-    let errors = {};
-    if (!values.name) {
-      errors.name = "name is required";
-    } else if (values.name.length < 3) {
-      errors.name = "name minlength is 3";
-    } else if (values.name.length > 10) {
-      errors.name = "name maxlength is 10";
-    }
 
-    if (!values.phone) {
-      errors.phone = "phone is required";
-    }
-    if (!phoneRegex.test(values.phone)) {
-      errors.phone = "phone number invalid";
-    }
 
-    if (!values.email) {
-      errors.email = "email is required";
-    }
-    if (!emailRegex.test(values.email)) {
-      errors.email = "email  invalid";
-    }
-    return errors;
-  }
+  const phoneRegExp =
+    /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
 
+  let validationSchema = Yup.object({
+    name: Yup.string()
+      .min(3, "name minlength is 3")
+      .max(10, "name maxlength is 10")
+      .required("name is required"),
+    email: Yup.string().email("email is invalid").required("email is required"),
+    phone: Yup.string()
+      .matches(phoneRegExp, "phone is invalid")
+      .required("phone is required"),
+    password: Yup.string()
+      .matches(/^[A-Z][a-z0-9]{5,10}$/, "password start with uppercase")
+      .required("password is required"),
+    rePassword: Yup.string()
+      .oneOf([Yup.ref("password")], "Password must match")
+      .required("rePassword is required"),
+  });
   let formik = useFormik({
     initialValues: {
       name: "",
@@ -45,7 +37,7 @@ export default function Register() {
       password: "",
       rePassword: "",
     },
-    validate,
+    validationSchema,
     onSubmit: () => registerSubmit,
   });
 
@@ -65,12 +57,10 @@ export default function Register() {
             id="name"
             name="name"
           />
-          {formik.errors.name && formik.touched.phone ? (
+          {formik.errors.name && formik.touched.name && (
             <div className="alert mt-2 p-2 alert-danger">
               {formik.errors.name}
             </div>
-          ) : (
-            ""
           )}
 
           <label htmlFor="email">Email :</label>
@@ -83,6 +73,11 @@ export default function Register() {
             id="email"
             name="email"
           />
+           {formik.errors.email && formik.touched.email && (
+            <div className="alert mt-2 p-2 alert-danger">
+              {formik.errors.email}
+            </div>
+          )}
 
           <label htmlFor="phone">Phone :</label>
           <input
@@ -94,12 +89,10 @@ export default function Register() {
             id="phone"
             name="phone"
           />
-          {formik.errors.phone && formik.touched.phone ? (
+          {formik.errors.phone && formik.touched.phone && (
             <div className="alert mt-2 p-2 alert-danger">
               {formik.errors.phone}
             </div>
-          ) : (
-            ""
           )}
           <label htmlFor="password">Password:</label>
           <input
@@ -111,6 +104,11 @@ export default function Register() {
             id="password"
             name="password"
           />
+          {formik.errors.password && formik.touched.password && (
+            <div className="alert mt-2 p-2 alert-danger">
+              {formik.errors.password}
+            </div>
+          )}
 
           <label htmlFor="rePassword">RePassword:</label>
           <input
@@ -122,7 +120,12 @@ export default function Register() {
             id="rePassword"
             name="rePassword"
           />
-          <button className="btn bg-main text-white mt-2" type="submit">
+          {formik.errors.rePassword && formik.touched.rePassword && (
+            <div className="alert mt-2 p-2 alert-danger">
+              {formik.errors.rePassword}
+            </div>
+          )}
+          <button disabled={!(formik.isValid && formik.dirty)} className="btn bg-main text-white mt-2" type="submit">
             Register
           </button>
         </form>
